@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.widgets import Button, SpanSelector
+from matplotlib.widgets import Button, SpanSelector, TextBox
 # from matplotlib_scalebar.scalebar import ScaleBar
 from matplotlib.colorbar import Colorbar
 import numpy as np
@@ -76,6 +76,14 @@ class ImageDisplay(object):
         self.ax_colourbar = plt.subplot(self.gs_fig_image[1:-1, 7])
         self.colourbar = Colorbar(self.ax_colourbar, self.image)
 
+        # Textbox for colormap
+        self.ax_cmin = plt.axes([0.8, 0.85, 0.1, 0.05])
+        self.ax_cmax = plt.axes([0.8, 0.8, 0.1, 0.05])
+        self.text_cmin = TextBox(self.ax_cmin, label='min', initial=str(self.cmin), label_pad=0.25)
+        self.text_cmax = TextBox(self.ax_cmax, label='max', initial=str(self.cmax), label_pad=0.25)
+        self.text_cmin.on_submit(self.update_cmin)
+        self.text_cmax.on_submit(self.update_cmax)
+
         # Show the display window
         plt.show()
 
@@ -119,6 +127,18 @@ class ImageDisplay(object):
     def update_colourmap(self):
         self.colourbar.update_bruteforce(self.image)
 
+    def update_cm_textbox(self):
+        self.text_cmin.set_val(str(self.cmin))
+        self.text_cmax.set_val(str(self.cmax))
+
+    def update_cmin(self, event):
+        self.cmin = float(event)
+        self.contrast_span(self.cmin, self.cmax)
+
+    def update_cmax(self, event):
+        self.cmax = float(event)
+        self.contrast_span(self.cmin, self.cmax)
+
     # Calculates and plots image histogram and connects interactive spanselector
     def plot_contrast_histogram(self):
         self.ax_contrast.cla()
@@ -133,3 +153,4 @@ class ImageDisplay(object):
         self.cmax = cmax
         self.update_image()
         self.update_colourmap()
+        self.update_cm_textbox()
