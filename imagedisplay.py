@@ -22,8 +22,10 @@ Scalebar on/off
 ButtonParams = collections.namedtuple('bp', ['text', 'x', 'y', 'functioncall'])
 
 
-class HoloDisplay(object):
+class ImageDisplay(object):
+    '''ImageDisplay class to display 2d arrays with some parameters'''
     def __init__(self, data_to_display):
+        # 2D array to display
         self.image_data = data_to_display
         # Window for image display + matplotlib parameters
         self.fig_image = plt.figure(figsize=(10, 7), dpi=100)
@@ -31,7 +33,7 @@ class HoloDisplay(object):
         self.gs_fig_image = gridspec.GridSpec(8, 8)
 
         # Make buttons and assign function calls
-        BUTTONS = (
+        buttons = (
             ButtonParams('Refresh', 0, 0, self.test),
             ButtonParams('Set\nColourmap', 1, 0, self.ColourmapButton),
             ButtonParams('Num 2', 2, 0, self.test),
@@ -44,7 +46,7 @@ class HoloDisplay(object):
         self.fig_image_parameter = []
 
         # Assign button to subplot in figure
-        for ii in BUTTONS:
+        for ii in buttons:
             button = Button(plt.subplot(self.gs_fig_image[ii.x, ii.y]), ii.text)
             button.on_clicked(ii.functioncall)
             self.fig_image_parameter.append(button)
@@ -65,7 +67,7 @@ class HoloDisplay(object):
         #		self.fig_image_parameter_7 = Button(self.ax_parameter_7, 'Param 7')
         #		self.ax_parameter_8 = plt.subplot(self.gs_fig_image[7, 0])
         #		self.fig_image_parameter_8 = Button(self.ax_parameter_8, 'Export')
-        self.ax_image = plt.subplot(self.gs_fig_image[:, 1:-1])
+        self.ax_image = plt.subplot(self.gs_fig_image[1:-1 , 1:-1])
         self.ax_image.set_axis_off()
 
         # Function of each axes
@@ -80,22 +82,21 @@ class HoloDisplay(object):
         self.image = self.ax_image.imshow(self.image_data, cmap='gray')
 
         # Contrast histogram display and span selector
-        self.ax_contrast = plt.subplot(self.gs_fig_image[:, -1])
+        self.ax_contrast = plt.subplot(self.gs_fig_image[0, 1:-1])
         self.contrastbins = 256
         self.cmin = np.min(self.image_data)
         self.cmax = np.max(self.image_data)
         self.PlotContrastHistogram()
 
         # Colourmaps
-        self.maps = sorted([m for m in plt.cm.datad if not m.endswith("_r")], key=string.lower, reverse=True)
+        self.maps = sorted([m for m in plt.cm.datad if not m.endswith("_r")])
         # (https://scipy.github.io/old-wiki/pages/Cookbook/Matplotlib/Show_colormaps)
 
         # Show the display window
         plt.show()
 
     def test(self, event):
-        print
-        event
+        print(event)
 
     # Button to open colourmap selection window
     def ColourmapButton(self, event):
@@ -132,9 +133,9 @@ class HoloDisplay(object):
     def PlotContrastHistogram(self):
         self.imhist, self.imbins = np.histogram(self.image_data, bins=self.contrastbins)
         self.ax_contrast.cla()
-        self.ax_contrast.plot(self.imhist, self.imbins[:-1], color='k')
+        self.ax_contrast.plot(self.imbins[:-1], self.imhist, color='k')
         self.ax_contrast.set_axis_off()
-        self.contrast_span = SpanSelector(self.ax_contrast, self.ContrastSpan, 'vertical',
+        self.contrast_span = SpanSelector(self.ax_contrast, self.ContrastSpan, 'horizontal',
                                           span_stays=True, rectprops=dict(alpha=0.5, facecolor='green'))
 
     # Function for interactive spanselector for contrast histogram
