@@ -3,8 +3,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.widgets import Button, SpanSelector, TextBox
-# from matplotlib_scalebar.scalebar import ScaleBar
+from matplotlib_scalebar.scalebar import ScaleBar
 from matplotlib.colorbar import Colorbar
+from scipy.misc import imsave
 import numpy as np
 # import time
 # import string
@@ -24,8 +25,8 @@ class ImageDisplay(object):
                 - Scalebar
                 - Line profile
                 - Export"""
-    def __init__(self, data_to_display):
-        # 2D array to display
+    def __init__(self, data_to_display, cal=None):
+        # 2D array to display with calibration cal in nm/pixel
         self.image_data = data_to_display
         # Window for image display + matplotlib parameters
         self.fig_image = plt.figure(figsize=(10, 7), dpi=100)
@@ -36,12 +37,12 @@ class ImageDisplay(object):
         buttons = (
             ButtonParams('Refresh', 0, 0, self.test),
             ButtonParams('Set\nColourmap', 1, 0, self.colourmap_button),
-            ButtonParams('Num 2', 2, 0, self.test),
-            ButtonParams('Num 3', 3, 0, self.test),
+            ButtonParams('Calibration', 2, 0, self.test),
+            ButtonParams('Scale bar', 3, 0, self.update_scalebar),
             ButtonParams('Num 4', 4, 0, self.test),
             ButtonParams('Num 5', 5, 0, self.test),
             ButtonParams('Num 6', 6, 0, self.test),
-            ButtonParams('Export', 7, 0, self.test)
+            ButtonParams('Export', 7, 0, self.export_data)
         )
         self.fig_image_parameter = []
 
@@ -79,10 +80,23 @@ class ImageDisplay(object):
         # Textbox for colormap
         self.ax_cmin = plt.axes([0.8, 0.85, 0.1, 0.05])
         self.ax_cmax = plt.axes([0.8, 0.8, 0.1, 0.05])
-        self.text_cmin = TextBox(self.ax_cmin, label='min', initial=str(self.cmin), label_pad=0.25)
-        self.text_cmax = TextBox(self.ax_cmax, label='max', initial=str(self.cmax), label_pad=0.25)
+        self.text_cmin = TextBox(self.ax_cmin, label='min', initial="%.2f" % self.cmin, label_pad=0.25)
+        self.text_cmax = TextBox(self.ax_cmax, label='max', initial="%.2f" % self.cmax, label_pad=0.25)
         self.text_cmin.on_submit(self.update_cmin)
         self.text_cmax.on_submit(self.update_cmax)
+
+        # Calibration textbox
+        self.cal = cal
+        self.ax_cal = plt.axes([0.5, 0.1, 0.1, 0.05])
+        if self.cal is None:
+            self.text_cal = TextBox(self.ax_cal, label='Calibration (nm/pixel)', initial='', label_pad=0.25)
+        else:
+            self.text_cal = TextBox(self.ax_cal, label='Calibration (nm/pixel)', initial=self.cal, label_pad=0.25)
+        self.text_cal.on_submit(self.update_calibration)
+
+        # Scalebar
+        self.state_scalebar = 0
+        self.scalebar = None
 
         # Show the display window
         plt.show()
@@ -128,8 +142,8 @@ class ImageDisplay(object):
         self.colourbar.update_bruteforce(self.image)
 
     def update_cm_textbox(self):
-        self.text_cmin.set_val(str(self.cmin))
-        self.text_cmax.set_val(str(self.cmax))
+        self.text_cmin.set_val("%.2f" % self.cmin)
+        self.text_cmax.set_val("%.2f" % self.cmax)
 
     def update_cmin(self, event):
         self.cmin = float(event)
@@ -154,3 +168,79 @@ class ImageDisplay(object):
         self.update_image()
         self.update_colourmap()
         self.update_cm_textbox()
+
+    def update_calibration(self, event):
+        self.cal = float(event)
+
+    def update_scalebar(self, event):
+        if event.inaxes == self.fig_image_parameter[3].ax:
+            if self.state_scalebar == 0:
+                if self.cal is not None:
+                    self.state_scalebar = 1
+                    self.scalebar = self.ax_image.add_artist(ScaleBar(self.cal * 10 ** -9))
+                    self.fig_image.canvas.draw()
+            elif self.state_scalebar == 1:
+                if self.cal is not None:
+                    self.state_scalebar = 0
+                    self.scalebar.remove()
+                    self.fig_image.canvas.draw()
+            else:
+                raise Exception("Invalid parameter for scalebar")
+
+    def export_data(self, event):
+        if event.inaxes == self.fig_image_parameter[7].ax:
+            print('export')
+            '''Save image respecting the number of pixels of the origin image'''
+            imsave('image_array.png', self.image_data)
+            '''Save image without respecting the number of pixels of the origin image'''
+            plt.ioff()
+            fig_export = plt.figure(figsize=(10, 7), dpi=100)
+            image_fig_export = fig_export.add_subplot(1, 1, 1).imshow(self.image_data,
+                                                                      cmap=self.cmap,
+                                                                      vmin=self.cmin,
+                                                                      vmax=self.cmax
+                                                                      )
+            fig_export.colorbar(image_fig_export)
+            fig_export.savefig('image.png')
+            print('Image saved')
+            plt.close(fig_export)
+
+"""
+From Isobel
+
+def SaveImgAsPNG(self, filename, clim, cmap=None):
+#		r_min = max(clim[0], self.Imglim[0])
+#		r_max = min(clim[1], self.Imglim[1])
+		r_min = clim[0]
+		r_max = clim[1]
+		filename = FileNamer.NameFile(filename)
+		writefile = open(filename, 'wb')
+		if type(self.data)==np.ma.MaskedArray:
+			writeImage = np.empty((self.size[0], self.size[1]*2))
+			writeImage[:, 0::2] = np.round(255*(self.data.data.astype(float) - r_min)/float((r_max - r_min)))*np.invert(self.data.mask)
+			writeImage[:, 1::2] = np.invert(self.data.mask)*255
+			alph = True
+		else:
+			writeImage = np.round(255*(self.data.astype(float) - r_min)/float((r_max - r_min)))
+			alph = False
+		if cmap is not None:
+			colours = (cmap(np.arange(0,256))*255).astype(int)
+			colourstuple = map(tuple, colours)
+			if np.all(np.equal(np.array(colours[:,0]),np.array(colours[:,1]), np.array(colours[:,2]))):
+				writer = png.Writer(size = self.size[::-1], greyscale = True, alpha = alph)
+				print('I am so gray...')
+			else:
+				writer = png.Writer(size = self.size[::-1], palette=colourstuple, bitdepth=8)
+
+				if type(self.data) == np.ma.MaskedArray:
+					writeImage = np.round(255*(self.data.data.astype(float) - r_min)/float((r_max - r_min)))*np.invert(self.data.mask)
+				else:
+					writeImage = np.round(255*(self.data.astype(float) - r_min)/float((r_max - r_min)))
+				print('Well, colour me pink!')
+		else:
+			writer = png.Writer(size = self.size[::-1], greyscale = True, alpha = alph)
+		writeImage[writeImage < 0] = 0
+		writeImage[writeImage > 255] = 255
+
+		writer.write(writefile, writeImage)
+		writefile.close()"""
