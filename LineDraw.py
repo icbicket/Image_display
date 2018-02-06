@@ -1,4 +1,3 @@
-from __future__ import print_function
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,8 +51,12 @@ class LineDraw(object):
         self.canvas.mpl_disconnect(self.cidendpick)
         self.canvas.mpl_disconnect(self.cidenddrag)
         self.canvas.mpl_disconnect(self.cidendrelease)
+        self.canvas.mpl_disconnect(self.cidenddraw)
+        self.canvas.mpl_disconnect(self.cidwidth)
 
     def LineStart(self, event):
+        if event.inaxes != self.axis:
+            return
         self.LineCoords[0] = [event.xdata, event.ydata]
         self.line = mlines.Line2D(self.LineCoords[:, 0], self.LineCoords[:, 0], 
             lw=self.WidthData, c='r', animated=True)
@@ -61,6 +64,8 @@ class LineDraw(object):
         self.background = self.canvas.copy_from_bbox(self.axis.bbox)
 
     def LineEnd(self, event):
+        if event.inaxes != self.axis:
+            return
         self.LineCoords[1] = [event.xdata, event.ydata]
         self.CoordTransform = self.axis.transData.inverted()
         self.WidthData = self.WidthDataCoords()
