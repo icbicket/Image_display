@@ -233,11 +233,11 @@ class ImageDisplay(object):
             '''Save image without respecting the number of pixels of the origin image'''
             plt.ioff()
             fig_export = plt.figure(figsize=(10, 7), dpi=100)
-            image_fig_export = fig_export.add_subplot(1, 1, 1).imshow(self.image_data,
-                                                                      cmap=self.cmap,
-                                                                      vmin=self.cmin,
-                                                                      vmax=self.cmax
-                                                                      )
+            ax_fig_export = fig_export.add_subplot(1, 1, 1)
+            image_fig_export = ax_fig_export.imshow(self.image_data, cmap=self.cmap, vmin=self.cmin, vmax=self.cmax)
+            if self.scalebar == 1:
+                ax_fig_export.add_artist(ScaleBar(self.cal * 10 ** -9))
+                fig_export.canvas.draw()
             fig_export.colorbar(image_fig_export)
             fig_export.savefig('image.png')
             print('Image saved')
