@@ -42,7 +42,7 @@ class ImageDisplay(object):
             ButtonParams('Calibration', 2, 0, self.test),
             ButtonParams('Scale bar', 3, 0, self.update_scalebar),
             ButtonParams('Line profile', 4, 0, self.line_profile),
-            ButtonParams('Num 5', 5, 0, self.test),
+            ButtonParams('Rotate CCW', 5, 0, self.rotate_90),
             ButtonParams('Num 6', 6, 0, self.test),
             ButtonParams('Export', 7, 0, self.export_data)
         )
@@ -224,6 +224,12 @@ class ImageDisplay(object):
                     self.fig_image.canvas.draw()
             else:
                 raise Exception("Invalid parameter for scalebar")
+
+    def rotate_90(self, event):
+        if event.inaxes == self.fig_image_parameter[5].ax:
+            self.image_data = np.rot90(self.image_data)
+            self.image.set_array(self.image_data)
+            self.fig_image.canvas.draw()
 
     def export_data(self, event):
         if event.inaxes == self.fig_image_parameter[7].ax:
