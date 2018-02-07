@@ -145,7 +145,7 @@ class ImageDisplay(object):
     def line_profile(self, event):
         if event.inaxes == self.fig_image_parameter[4].ax:
             if self.line_prof_edit == 0:
-                if self.line_prof is None :
+                if self.line_prof is None:
                     print('create line')
                     self.line_prof_edit = 1
                     self.line_prof = LineDraw.LineDraw(self.ax_image)
@@ -154,7 +154,7 @@ class ImageDisplay(object):
                     print('edit line')
                     self.line_prof_edit = 1
                     self.line_prof.ConnectMove()
-            elif self.line_prof_edit ==1:
+            elif self.line_prof_edit == 1:
                 print('disconect')
                 self.line_prof_edit = 0
                 self.line_prof.DisconnectDraw()
