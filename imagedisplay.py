@@ -234,7 +234,7 @@ class ImageDisplay(object):
 
     def export_data(self, event):
         if event.inaxes == self.fig_image_parameter[7].ax:
-            '''Save raw data in text'''
+            '''Save raw data in textgi'''
             np.savetxt('array_raw.txt', self.image_data, delimiter='')
             if self.line_prof is not None:
                 np.savetxt('profile_raw.txt.', self.line_prof, delimiter='')
