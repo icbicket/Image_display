@@ -105,6 +105,7 @@ class ImageDisplay(object):
         self.line_prof_edit = 0
         self.fig_line_prof = None
         self.ax_fig_line_prof = None
+        self.profile = None
 
         # Show the display window
         plt.show()
@@ -164,10 +165,9 @@ class ImageDisplay(object):
                 print(self.line_prof.WidthData)
                 first_postion = (self.line_prof.LineCoords[0][1], self.line_prof.LineCoords[0][0])
                 second_postion = (self.line_prof.LineCoords[1][1], self.line_prof.LineCoords[1][0])
-                line_profile = skimage.measure.profile_line(self.image_data, first_postion,
-                                                            second_postion,
+                self.profile = skimage.measure.profile_line(self.image_data, first_postion, second_postion,
                                                             linewidth=int(self.line_prof.WidthData))
-                self.ax_fig_line_prof.plot(line_profile)
+                self.ax_fig_line_prof.plot(self.profile)
                 plt.show()
             else:
                 return
@@ -233,15 +233,18 @@ class ImageDisplay(object):
 
     def export_data(self, event):
         if event.inaxes == self.fig_image_parameter[7].ax:
-            print('export')
+            print('Export')
             '''Save image respecting the number of pixels of the origin image'''
             imsave('image_array.png', self.image_data)
+            '''Save line profile if it exists in text format'''
+            if self.profile is not None:
+                np.savetxt('profile.txt', self.profile)
             '''Save image without respecting the number of pixels of the origin image'''
             plt.ioff()
             fig_export = plt.figure(figsize=(10, 7), dpi=100)
             ax_fig_export = fig_export.add_subplot(1, 1, 1)
             image_fig_export = ax_fig_export.imshow(self.image_data, cmap=self.cmap, vmin=self.cmin, vmax=self.cmax)
-            if self.scalebar == 1:
+            if self.state_scalebar == 1:
                 ax_fig_export.add_artist(ScaleBar(self.cal * 10 ** -9))
                 fig_export.canvas.draw()
             fig_export.colorbar(image_fig_export)
