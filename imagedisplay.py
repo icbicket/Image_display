@@ -186,10 +186,13 @@ class ImageDisplay(object):
     def update_cmin(self, event):
         self.cmin = float(event)
         self.contrast_span(self.cmin, self.cmax)
+        print('yo', event)
+#        self.ax_contrast_span._set_span_xy(event)
 
     def update_cmax(self, event):
         self.cmax = float(event)
         self.contrast_span(self.cmin, self.cmax)
+#        self.ax_contrast_span.update()
 
     # Calculates and plots image histogram and connects interactive spanselector
     def plot_contrast_histogram(self):
