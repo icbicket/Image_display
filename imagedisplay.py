@@ -149,7 +149,7 @@ class ImageDisplay(object):
                 if self.line_prof is None:
                     print('create line')
                     self.line_prof_edit = 1
-                    self.line_prof = LineDraw.LineDraw(self.ax_image)
+                    self.line_prof = LineDraw.LineDraw(self.ax_image, epsilon=0.05*np.sqrt(np.size(self.image_data)))
                     self.line_prof.ConnectDraw()
                 else:
                     print('edit line')

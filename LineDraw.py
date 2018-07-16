@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class LineDraw(object):
-    epsilon = 5
-    def __init__(self, axis):
+#    epsilon = 5
+    def __init__(self, axis, epsilon):
         self.axis = axis
+        self.epsilon = epsilon
         self.canvas = self.axis.figure.canvas
         self.LineStartx = None
         self.LineStarty = None
