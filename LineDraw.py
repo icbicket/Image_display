@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class LineDraw(object):
-    epsilon = 5
-    def __init__(self, axis):
+
+    def __init__(self, axis, epsilon):
         self.axis = axis
+        self.epsilon = epsilon
         self.canvas = self.axis.figure.canvas
         self.LineStartx = None
         self.LineStarty = None
@@ -55,6 +56,8 @@ class LineDraw(object):
         self.canvas.mpl_disconnect(self.cidwidth)
 
     def LineStart(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         if event.inaxes != self.axis:
             return
         self.LineCoords[0] = [event.xdata, event.ydata]
@@ -64,6 +67,8 @@ class LineDraw(object):
         self.background = self.canvas.copy_from_bbox(self.axis.bbox)
 
     def LineEnd(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         if event.inaxes != self.axis:
             return
         self.LineCoords[1] = [event.xdata, event.ydata]
@@ -78,6 +83,8 @@ class LineDraw(object):
         plt.draw()
 
     def DrawLine(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         if event.button != 1:
             return
         if event.inaxes is None:
@@ -97,6 +104,8 @@ class LineDraw(object):
         self.canvas.draw()
 
     def DrawCanvas(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         self.background = self.canvas.copy_from_bbox(self.axis.bbox)
         if self.line is not None:
             self.axis.draw_artist(self.line)
@@ -106,10 +115,14 @@ class LineDraw(object):
         print('new sketch!')
         
     def MoveLinePress(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         self.vertex = self.GetPoint(event)
         #print(self.vertex)
     
     def MoveLineUpdate(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         if self.vertex is not None:
             self.LineCoords[self.vertex] = [event.xdata, event.ydata]
             self.line.set_data(self.LineCoords[:, 0], self.LineCoords[:, 1])
@@ -123,6 +136,8 @@ class LineDraw(object):
         return diff[0]
     
     def ChangeWidth(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         if event.button == 'up':
             self.width += 1
         elif event.button == 'down' and self.width > 1:
@@ -134,6 +149,8 @@ class LineDraw(object):
         self.canvas.draw()
     
     def GetPoint(self, event):
+        if plt.get_current_fig_manager().toolbar.mode != '':
+            return
         delta2 = np.sum((self.LineCoords - [event.xdata, event.ydata])**2, axis = 1)
         index = np.where(delta2 == np.min(delta2))[0]
         if delta2[index] >= self.epsilon**2:
